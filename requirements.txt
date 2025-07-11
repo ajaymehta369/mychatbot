@@ -1,0 +1,27 @@
+# Core libraries
+pandas
+numpy
+scikit-learn
+
+# Visualization (optional for EDA)
+matplotlib
+seaborn
+
+# Model saving/loading
+joblib
+
+# For XGBoost, if you're using it
+xgboost
+
+# For CatBoost, if you're using it
+catboost
+
+# Optional if you want to build Streamlit chatbot UI later
+streamlit
+
+# Optional: if you plan to use FastAPI backend
+fastapi
+uvicorn
+
+# Optional: if you're using Jupyter Notebook directly
+notebook
