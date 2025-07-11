@@ -1,6 +1,13 @@
 import streamlit as st
-import requests
+import joblib
+import numpy as np
+
+# Load the trained model
+model = joblib.load("loan_model.pkl")
+
 st.title("Loan Eligibility Assistant 🏦")
+
+# Collect inputs from user
 gender = st.selectbox("Gender", ["Male", "Female"])
 married = st.selectbox("Married", ["Yes", "No"])
 dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"])
@@ -12,30 +19,34 @@ loan_amt = st.number_input("Loan Amount", min_value=1)
 term = st.selectbox("Loan Term (months)", [360, 120, 180, 240])
 credit = st.selectbox("Credit History", [1.0, 0.0])
 area = st.selectbox("Property Area", ["Urban", "Semiurban", "Rural"])
+
 if st.button("Check Eligibility"):
     total_income = income + co_income
     income_ratio = total_income / loan_amt if loan_amt != 0 else 0
-    payload = {
-        "Gender": 1 if gender == "Male" else 0,
-        "Married": 1 if married == "Yes" else 0,
-        "Dependents": int(dependents.replace("+", "")),
-        "Education": 0 if education == "Graduate" else 1,
-        "Self_Employed": 1 if self_employed == "Yes" else 0,
-        "ApplicantIncome": income,
-        "CoapplicantIncome": co_income,
-        "LoanAmount": loan_amt,
-        "Loan_Amount_Term": term,
-        "Credit_History": credit,
-        "Property_Area": {"Urban": 2, "Semiurban": 1, "Rural": 0}[area],
-        "TotalIncome": total_income,
-        "IncomeLoanRatio": income_ratio
-    }
 
+    # Prepare input data for the model
+    input_data = np.array([[
+        1 if gender == "Male" else 0,
+        1 if married == "Yes" else 0,
+        int(dependents.replace("+", "")),
+        0 if education == "Graduate" else 1,
+        1 if self_employed == "Yes" else 0,
+        income,
+        co_income,
+        loan_amt,
+        term,
+        credit,
+        {"Urban": 2, "Semiurban": 1, "Rural": 0}[area],
+        total_income,
+        income_ratio
+    ]])
+
+    # Run prediction
     try:
-        response = requests.post("http://127.0.0.1:8000/predict", json=payload).json()
-        if response["Loan_Eligibility"] == "Yes":
+        prediction = model.predict(input_data)[0]
+        if prediction == 1:
             st.success("🎉 You're eligible for a loan!")
         else:
             st.error("❌ Sorry, you're not eligible right now.")
     except Exception as e:
-        st.error(f"Error connecting to API: {e}")
+        st.error(f"Prediction error: {e}")
